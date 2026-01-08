@@ -4,9 +4,15 @@ export interface FieldState {
   fluctuation: number;
   entanglement: number;
   frequency: number;
-  energyLevel: number; // Added
-  particleSpin: number; // Added
+  energyLevel: number;
+  particleSpin: number;
   anomalies: string[];
+}
+
+export interface SuggestedAdjustment {
+  parameter: string;
+  value: string;
+  direction: 'increase' | 'decrease' | 'stabilize';
 }
 
 export interface DiagnosticReport {
@@ -14,6 +20,8 @@ export interface DiagnosticReport {
   summary: string;
   recommendation: string;
   riskLevel: 'Low' | 'Moderate' | 'Critical' | 'Quantum Collapse';
+  suggestedAdjustments: SuggestedAdjustment[];
+  visualIntervention?: 'VECTOR_TRACE' | 'RESONANCE_SCAN' | 'VOID_ANALYSIS' | 'FLUX_GLOW';
 }
 
 export interface Particle {

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import FluxVisualizer from './components/FluxVisualizer';
 import ControlPanel from './components/ControlPanel';
 import QuantumDiagnostic from './components/QuantumDiagnostic';
-import { FieldState } from './types';
+import { FieldState, DiagnosticReport } from './types';
 import { audioEngine } from './services/audioService';
 
 const App: React.FC = () => {
@@ -17,6 +17,7 @@ const App: React.FC = () => {
     anomalies: [],
   });
 
+  const [lastReport, setLastReport] = useState<DiagnosticReport | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const audioInitialized = useRef(false);
@@ -136,7 +137,7 @@ const App: React.FC = () => {
         {/* Center Section: Visualiser */}
         <section className="lg:col-span-6 min-h-[500px] flex flex-col gap-4">
           <div className="flex-1 relative">
-            <FluxVisualizer state={fieldState} />
+            <FluxVisualizer state={fieldState} report={lastReport} />
             
             {/* HUD Overlays */}
             <div className="absolute bottom-6 right-6 flex flex-col gap-2 text-right pointer-events-none">
@@ -191,7 +192,7 @@ const App: React.FC = () => {
 
         {/* Right Section: Diagnostics */}
         <section className="lg:col-span-3">
-          <QuantumDiagnostic state={fieldState} />
+          <QuantumDiagnostic state={fieldState} onReportReceived={setLastReport} />
         </section>
 
       </main>

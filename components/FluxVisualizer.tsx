@@ -1,12 +1,13 @@
 
 import React, { useEffect, useRef } from 'react';
-import { FieldState, Particle } from '../types';
+import { FieldState, Particle, DiagnosticReport } from '../types';
 
 interface Props {
   state: FieldState;
+  report: DiagnosticReport | null;
 }
 
-const FluxVisualizer: React.FC<Props> = ({ state }) => {
+const FluxVisualizer: React.FC<Props> = ({ state, report }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -43,10 +44,10 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
       vy: (Math.random() - 0.5) * 2,
       life: Math.random() * 100 + 50,
       color: state.entanglement > 70 
-        ? '#f472b6' // Pink
+        ? '#f472b6' 
         : state.energyLevel > 150 
-          ? '#fbbf24' // Yellow
-          : '#22d3ee', // Cyan
+          ? '#fbbf24' 
+          : '#22d3ee',
     });
 
     for (let i = 0; i < particleCount; i++) {
@@ -64,7 +65,6 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
                     * (state.frequency / 10) 
                     + spinOffset;
       
-      // Anomaly: Phase Drift adds global angular oscillation
       if (state.anomalies.includes('Phase Drift')) {
         angle += Math.sin(t * 2) * 0.5;
       }
@@ -80,11 +80,13 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
     const render = () => {
       t += 0.01 * (state.fluctuation / 50);
       
-      const fadeAlpha = Math.max(0.08, 0.2 - (state.energyLevel / 1000));
+      // AI Intervention: VOID_ANALYSIS darkens the background more significantly
+      const intervention = report?.visualIntervention;
+      const baseAlpha = intervention === 'VOID_ANALYSIS' ? 0.4 : 0.08;
+      const fadeAlpha = Math.max(baseAlpha, 0.2 - (state.energyLevel / 1000));
       ctx.fillStyle = `rgba(2, 6, 23, ${fadeAlpha})`;
       ctx.fillRect(0, 0, width, height);
 
-      // Constants for central anomalies
       const centerX = width / 2;
       const centerY = height / 2;
       const hasEventHorizon = state.anomalies.includes('Event Horizon');
@@ -98,7 +100,6 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
         p.vx += force.x * accel;
         p.vy += force.y * accel;
 
-        // Gravitational/Magnetic Pull
         const dx = centerX - p.x;
         const dy = centerY - p.y;
         const distSq = dx * dx + dy * dy;
@@ -111,13 +112,12 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
             p.vy += dy * pull;
           }
           if (dist < horizonRadius) {
-            p.life = 0; // Consumed
+            p.life = 0; 
           }
         }
 
         if (hasFluxPinch) {
           if (dist < 150) {
-            // Intense spiral pull
             const pull = (150 - dist) / 100;
             const swirl = (150 - dist) / 50;
             p.vx += dx * pull + dy * swirl;
@@ -131,7 +131,6 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
         p.y += p.vy;
         p.life -= 0.5;
 
-        // Border wrapping
         if (p.x < 0) p.x = width;
         if (p.x > width) p.x = 0;
         if (p.y < 0) p.y = height;
@@ -141,30 +140,48 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
           particles[i] = createParticle();
         }
 
+        // AI Intervention: VECTOR_TRACE makes particles leave longer streaks
         ctx.beginPath();
         const radius = 1.2 + (state.energyLevel / 200);
-        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        
-        if (state.entanglement > 80) {
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = p.color;
+        if (intervention === 'VECTOR_TRACE') {
+          ctx.moveTo(p.x - p.vx * 10, p.y - p.vy * 10);
+          ctx.lineTo(p.x, p.y);
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = radius;
+          ctx.stroke();
         } else {
-          ctx.shadowBlur = 0;
+          ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          
+          if (state.entanglement > 80 || intervention === 'FLUX_GLOW') {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = p.color;
+          } else {
+            ctx.shadowBlur = 0;
+          }
+          ctx.fill();
         }
-        ctx.fill();
       });
+
+      // AI Intervention: RESONANCE_SCAN circles
+      if (intervention === 'RESONANCE_SCAN') {
+        const scanR = (t * 500) % width;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, scanR, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(168, 85, 247, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
 
       // Background Grid with Lensing
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = 'rgba(34, 211, 238, 0.05)';
+      ctx.strokeStyle = intervention === 'VOID_ANALYSIS' ? 'rgba(34, 211, 238, 0.15)' : 'rgba(34, 211, 238, 0.05)';
       const gridSize = 40;
       for (let x = 0; x < width + gridSize; x += gridSize) {
         ctx.beginPath();
         for (let y = 0; y < height + gridSize; y += 10) {
           let drawX = x;
           let drawY = y;
-          
           if (hasEventHorizon) {
             const dx = x - centerX;
             const dy = y - centerY;
@@ -175,7 +192,6 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
               drawY -= (dy / d) * lens;
             }
           }
-          
           if (y === 0) ctx.moveTo(drawX, drawY);
           else ctx.lineTo(drawX, drawY);
         }
@@ -187,7 +203,6 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
         ctx.shadowBlur = 0;
         switch (anomaly) {
           case 'Tachyon Leak':
-            // Streaking particles
             for (let j = 0; j < 8; j++) {
               ctx.beginPath();
               const seed = (t + j * 0.5) % 1;
@@ -199,22 +214,17 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
               ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * (1 - seed)})`;
               ctx.lineWidth = 2;
               ctx.stroke();
-              // Spark at tip
               ctx.fillStyle = 'white';
               ctx.fillRect(sx - 1, sy + len - 1, 3, 3);
             }
             break;
-
           case 'Flux Pinch':
-            // High-voltage erratic center
             ctx.beginPath();
             const pinchR = 60 + Math.sin(t * 20) * 15;
             ctx.arc(centerX, centerY, pinchR, 0, Math.PI * 2);
             ctx.strokeStyle = `rgba(236, 72, 153, ${0.4 + Math.random() * 0.4})`;
             ctx.lineWidth = 3;
             ctx.stroke();
-            
-            // Arcs jumping from center
             for (let k = 0; k < 4; k++) {
               ctx.beginPath();
               ctx.moveTo(centerX, centerY);
@@ -230,9 +240,7 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
               ctx.stroke();
             }
             break;
-
           case 'Event Horizon':
-            // Central Void
             const grad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, horizonRadius + 15);
             grad.addColorStop(0, '#000000');
             grad.addColorStop(0.9, '#000000');
@@ -241,8 +249,6 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
             ctx.beginPath();
             ctx.arc(centerX, centerY, horizonRadius + 15, 0, Math.PI * 2);
             ctx.fill();
-
-            // Dynamic Accretion Disk
             ctx.lineWidth = 2;
             for (let d = 0; d < 3; d++) {
               ctx.beginPath();
@@ -265,12 +271,19 @@ const FluxVisualizer: React.FC<Props> = ({ state }) => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', resize);
     };
-  }, [state]);
+  }, [state, report]);
 
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-slate-950 rounded-lg border border-cyan-900/30">
       <canvas ref={canvasRef} className="w-full h-full" />
       
+      {/* AI Intervention HUD */}
+      {report?.visualIntervention && (
+        <div className="absolute top-4 right-4 text-[10px] mono bg-purple-500/20 text-purple-400 px-3 py-1 rounded border border-purple-500/50 animate-pulse">
+          AI_INTERVENTION: {report.visualIntervention}
+        </div>
+      )}
+
       <div className="absolute bottom-4 left-4 flex flex-col gap-2 pointer-events-none">
         {state.anomalies.map(anomaly => (
           <div key={anomaly} className="flex items-center gap-2 px-2 py-1 bg-red-500/10 border border-red-500/50 rounded text-[9px] text-red-400 mono animate-pulse">

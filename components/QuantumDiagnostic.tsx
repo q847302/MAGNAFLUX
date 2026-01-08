@@ -5,9 +5,10 @@ import { getQuantumDiagnostic } from '../services/geminiService';
 
 interface Props {
   state: FieldState;
+  onReportReceived: (report: DiagnosticReport) => void;
 }
 
-const QuantumDiagnostic: React.FC<Props> = ({ state }) => {
+const QuantumDiagnostic: React.FC<Props> = ({ state, onReportReceived }) => {
   const [report, setReport] = useState<DiagnosticReport | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -15,6 +16,7 @@ const QuantumDiagnostic: React.FC<Props> = ({ state }) => {
     setLoading(true);
     const result = await getQuantumDiagnostic(state);
     setReport(result);
+    onReportReceived(result);
     setLoading(false);
   };
 
@@ -49,20 +51,18 @@ const QuantumDiagnostic: React.FC<Props> = ({ state }) => {
         </button>
       </div>
 
-      <div className="flex-1 glass rounded-xl p-6 relative overflow-hidden flex flex-col justify-center items-center min-h-[300px]">
+      <div className="flex-1 glass rounded-xl p-6 relative overflow-hidden flex flex-col justify-start min-h-[400px] overflow-y-auto">
         {!report && !loading && (
-          <div className="text-center">
-            <div className="w-16 h-16 border-2 border-dashed border-cyan-800 rounded-full flex items-center justify-center mb-4 mx-auto opacity-40">
-              <svg className="w-8 h-8 text-cyan-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <p className="text-slate-500 text-sm italic">Initiate scan to begin quantum field analysis</p>
+          <div className="flex-1 flex flex-col items-center justify-center opacity-40">
+            <svg className="w-12 h-12 text-cyan-800 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <p className="text-slate-500 text-sm italic">Waiting for quantum telemetry...</p>
           </div>
         )}
 
         {loading && (
-          <div className="space-y-4 w-full">
+          <div className="space-y-4 w-full mt-12">
             <div className="h-4 bg-slate-800/50 rounded animate-pulse w-3/4"></div>
             <div className="h-4 bg-slate-800/50 rounded animate-pulse w-1/2"></div>
             <div className="h-4 bg-slate-800/50 rounded animate-pulse w-5/6"></div>
@@ -74,9 +74,13 @@ const QuantumDiagnostic: React.FC<Props> = ({ state }) => {
 
         {report && !loading && (
           <div className="w-full space-y-6">
-            <div className="flex justify-between items-start">
-              <div className="mono text-[10px] text-cyan-700">REPORT_ID: {Math.random().toString(36).substring(7).toUpperCase()}</div>
-              <div className="mono text-[10px] text-cyan-700">{report.timestamp}</div>
+            <div className="flex justify-between items-start border-b border-cyan-900/30 pb-2">
+              <div className="mono text-[10px] text-cyan-700">SCAN_COMPLETE // {report.timestamp}</div>
+              {report.visualIntervention && (
+                <div className="mono text-[10px] bg-purple-500/10 text-purple-400 px-2 rounded border border-purple-500/30">
+                  MODE: {report.visualIntervention}
+                </div>
+              )}
             </div>
             
             <section>
@@ -86,12 +90,29 @@ const QuantumDiagnostic: React.FC<Props> = ({ state }) => {
                   {report.riskLevel}
                 </span>
               </h3>
-              <p className="text-lg leading-relaxed text-slate-200 font-light">{report.summary}</p>
+              <p className="text-sm leading-relaxed text-slate-200">{report.summary}</p>
             </section>
 
             <section className="bg-cyan-950/20 p-4 rounded-lg border border-cyan-900/30">
-              <h3 className="text-xs font-bold text-cyan-500 uppercase tracking-widest mb-2">Protocol Recommendation</h3>
-              <p className="text-sm text-cyan-200/80 italic">"{report.recommendation}"</p>
+              <h3 className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-3">Granular Adjustments</h3>
+              <div className="space-y-2">
+                {report.suggestedAdjustments.map((adj, i) => (
+                  <div key={i} className="flex justify-between items-center text-[11px] bg-slate-900/50 p-2 rounded">
+                    <span className="text-slate-400">{adj.parameter}</span>
+                    <span className={`font-bold flex items-center gap-1 ${
+                      adj.direction === 'increase' ? 'text-green-400' : adj.direction === 'decrease' ? 'text-red-400' : 'text-blue-400'
+                    }`}>
+                      {adj.direction === 'increase' ? '▲' : adj.direction === 'decrease' ? '▼' : '●'}
+                      {adj.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Protocol Recommendation</h3>
+              <p className="text-sm text-cyan-200/80 italic border-l-2 border-cyan-700 pl-3">"{report.recommendation}"</p>
             </section>
           </div>
         )}
