@@ -1,0 +1,5 @@
+{
+  "name": "Quantum Magnaflux Visualiser",
+  "description": "A high-fidelity dashboard for monitoring simulated quantum magnetic fields, featuring real-time vector field visualizations and AI-driven field diagnostics.",
+  "requestFramePermissions": []
+}
